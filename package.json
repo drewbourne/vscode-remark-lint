@@ -1,0 +1,68 @@
+{
+  "name": "vscode-remark-lint",
+  "displayName": "vscode-remark-lint",
+  "description": "Use remark & retext to lint Markdown",
+  "version": "0.0.0",
+  "publisher": "drewbourne",
+  "engines": {
+    "vscode": "^1.26.0"
+  },
+  "categories": [
+    "Linters"
+  ],
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onCommand:remark-lint.lint-markdown"
+  ],
+  "main": "./out/extension",
+  "contributes": {
+    "commands": [
+      {
+        "command": "remark-lint.show-output",
+        "title": "Markdown: Show Output"
+      },
+      {
+        "command": "remark-lint.lint-markdown",
+        "title": "Markdown: Lint Document"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "npm run compile && node ./node_modules/vscode/bin/test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^2.2.42",
+    "@types/node": "^8.10.25",
+    "@types/vfile": "^2.2.2",
+    "tslint": "^5.8.0",
+    "typescript": "^2.6.1",
+    "vscode": "^1.1.21"
+  },
+  "dependencies": {
+    "dictionary-en-us": "^2.0.0",
+    "markdown-extensions": "^1.1.1",
+    "remark": "^9.0.0",
+    "remark-lint": "^6.0.2",
+    "remark-parse": "^5.0.0",
+    "remark-preset-lint-consistent": "^2.0.2",
+    "remark-preset-lint-markdown-style-guide": "^2.1.2",
+    "remark-preset-lint-recommended": "^3.0.2",
+    "remark-retext": "^3.1.1",
+    "remark-stringify": "^5.0.0",
+    "retext": "^5.0.0",
+    "retext-english": "^3.0.0",
+    "retext-spell": "^2.3.1",
+    "to-vfile": "^5.0.1",
+    "unified": "^7.0.0",
+    "unified-engine": "^6.0.1",
+    "vfile": "^3.0.0",
+    "vfile-location": "^2.0.3",
+    "vfile-message": "^1.0.1",
+    "vfile-messages-to-vscode-diagnostics": "^1.0.2",
+    "vfile-reporter": "^5.0.0"
+  }
+}
