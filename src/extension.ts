@@ -36,26 +36,63 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('remark-lint.lint-markdown', () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
-        outputChannel.appendLine('lint-markdown, no active editor');
+        outputChannel.appendLine('Unable to execute: No active editor');
         return;
       }
 
-      const document = editor.document;
-      outputChannel.appendLine(`lint-markdown, document ${document.uri}`);
-      return execute(document);
+      return execute(editor.document);
     })
   );
+
+  context.subscriptions.push(
+    vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
+      outputChannel.appendLine(`onDidSaveTextDocument ${document.languageId}`);
+      execute(document);
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.workspace.onDidOpenTextDocument((document: vscode.TextDocument) => {
+      outputChannel.appendLine(`onDidOpenTextDocument ${document.languageId}`);
+      execute(document);
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.workspace.onDidCloseTextDocument((document: vscode.TextDocument) => {
+      outputChannel.appendLine(`onDidCloseTextDocument ${document.languageId}`);
+    })
+  );
+
+  // context.subscriptions.push(
+  //   vscode.workspace.onDidChangeTextDocument(
+  //     (e: vscode.TextDocumentChangeEvent) => {
+  //       if (
+  //         ['debug', 'log'].indexOf(e.document.languageId.toLowerCase()) !== -1
+  //       ) {
+  //         return;
+  //       }
+
+  //       outputChannel.appendLine(
+  //         `onDidChangeTextDocument ${e.document.languageId}`
+  //       );
+  //     }
+  //   )
+  // );
+
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor(
+      (e: vscode.TextEditor | undefined) => {
+        if (e) {
+          outputChannel.appendLine(
+            `onDidChangeActiveTextEditor ${e.document.languageId}`
+          );
+          execute(e.document);
+        }
+      }
+    )
+  );
 }
-
-vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
-  execute(document);
-});
-
-// vscode.workspace.onDidOpenTextDocument()
-// vscode.workspace.onDidCloseTextDocument()
-// vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => {
-//   e.document
-// })
 
 // this method is called when your extension is deactivated
 export function deactivate() {
@@ -70,12 +107,32 @@ export function deactivate() {
 }
 
 function execute(document: vscode.TextDocument) {
-  outputChannel.appendLine(`execute ${document.fileName} ${document.uri}`);
+  outputChannel.appendLine(
+    `execute ${document.languageId} ${document.fileName}`
+  );
+
+  if (document.languageId !== 'markdown') {
+    outputChannel.appendLine(`Unsupported languageId: ${document.languageId}`);
+    return;
+  }
+
+  // FIXME for new docs, with markdown languageId, fake extname & use workspace path?
+  // FIXME support plugins in extensions config?
+  // FIXME support config in home dir: ~/.remarkrc.js?
 
   const file = vfile({
     path: document.fileName,
     contents: document.getText(),
   });
+
+  const extensions = require('markdown-extensions');
+
+  if (!file.extname || extensions.indexOf(file.extname.slice(1)) === -1) {
+    outputChannel.appendLine(
+      `Unsupported file extension for filename: ${document.fileName}`
+    );
+    return;
+  }
 
   return new Promise((resolve, reject) => {
     engine(
@@ -87,7 +144,7 @@ function execute(document: vscode.TextDocument) {
         presetPrefix: 'remark-preset',
         packageField: 'remarkConfig',
         ignoreName: '.remarkignore',
-        extensions: require('markdown-extensions'),
+        extensions: extensions,
         reporter: (results) => {
           reportVFileMessagesAsDiagnostics(document, results[0]);
           resolve();
