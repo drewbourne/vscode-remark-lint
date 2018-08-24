@@ -43,11 +43,24 @@
     "format-md": "prettier --write --config .prettierrc --parser markdown \"**/*.md\"",
     "format-ts": "prettier --write --config .prettierrc --parser typescript \"**/*.ts\""
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npx lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,css,json,md}": [
+      "prettier --write --config .prettierrc",
+      "git add"
+    ]
+  },
   "devDependencies": {
     "@types/mocha": "^2.2.42",
     "@types/node": "^8.10.25",
     "@types/vfile": "^2.2.2",
     "dictionary-en-us": "^2.0.0",
+    "husky": "^1.0.0-rc.13",
+    "lint-staged": "^7.2.2",
     "markdown-extensions": "^1.1.1",
     "prettier": "^1.14.2",
     "remark-cli": "^5.0.0",
