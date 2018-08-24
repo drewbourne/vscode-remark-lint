@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import engine from 'unified-engine';
 import remark from 'remark';
 import vfile, { VFileMessage, VFile } from 'vfile';
+import hrtime from 'pretty-hrtime';
 
 let diagnosticCollection: vscode.DiagnosticCollection;
 let statusBarItem: vscode.StatusBarItem;
@@ -15,7 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   outputChannel = vscode.window.createOutputChannel('remark-lint');
-  outputChannel.appendLine('activated');
+  outputChannel.appendLine('[remark-lint] Activated');
 
   statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right,
@@ -46,23 +47,23 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
-      outputChannel.appendLine(`onDidSaveTextDocument ${document.languageId}`);
+      // outputChannel.appendLine(`onDidSaveTextDocument ${document.languageId}`);
       execute(document);
     })
   );
 
   context.subscriptions.push(
     vscode.workspace.onDidOpenTextDocument((document: vscode.TextDocument) => {
-      outputChannel.appendLine(`onDidOpenTextDocument ${document.languageId}`);
+      // outputChannel.appendLine(`onDidOpenTextDocument ${document.languageId}`);
       execute(document);
     })
   );
 
-  context.subscriptions.push(
-    vscode.workspace.onDidCloseTextDocument((document: vscode.TextDocument) => {
-      outputChannel.appendLine(`onDidCloseTextDocument ${document.languageId}`);
-    })
-  );
+  // context.subscriptions.push(
+  //   vscode.workspace.onDidCloseTextDocument((document: vscode.TextDocument) => {
+  //     outputChannel.appendLine(`onDidCloseTextDocument ${document.languageId}`);
+  //   })
+  // );
 
   // context.subscriptions.push(
   //   vscode.workspace.onDidChangeTextDocument(
@@ -84,9 +85,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeActiveTextEditor(
       (e: vscode.TextEditor | undefined) => {
         if (e) {
-          outputChannel.appendLine(
-            `onDidChangeActiveTextEditor ${e.document.languageId}`
-          );
+          // outputChannel.appendLine(
+          //   `onDidChangeActiveTextEditor ${e.document.languageId}`
+          // );
           execute(e.document);
         }
       }
@@ -107,12 +108,12 @@ export function deactivate() {
 }
 
 function execute(document: vscode.TextDocument) {
-  outputChannel.appendLine(
-    `execute ${document.languageId} ${document.fileName}`
-  );
+  // outputChannel.appendLine(
+  //   `execute ${document.languageId} ${document.fileName}`
+  // );
 
   if (document.languageId !== 'markdown') {
-    outputChannel.appendLine(`Unsupported languageId: ${document.languageId}`);
+    // outputChannel.appendLine(`Unsupported languageId: ${document.languageId}`);
     return;
   }
 
@@ -135,6 +136,8 @@ function execute(document: vscode.TextDocument) {
   }
 
   return new Promise((resolve, reject) => {
+    const start = process.hrtime();
+
     engine(
       {
         processor: remark(),
@@ -146,7 +149,8 @@ function execute(document: vscode.TextDocument) {
         ignoreName: '.remarkignore',
         extensions: extensions,
         reporter: (results) => {
-          reportVFileMessagesAsDiagnostics(document, results[0]);
+          const elapsed = process.hrtime(start);
+          reportVFileMessagesAsDiagnostics(document, results[0], elapsed);
           resolve();
         },
       },
@@ -166,14 +170,20 @@ function reportVFileMessagesAsDiagnostics(
     path: string;
     contents: string;
     messages: VFileMessage[];
-  }>
+  }>,
+  elapsed: [number, number]
 ) {
   const { messages } = vfile;
 
-  outputChannel.appendLine(`messages ${messages.length}`);
+  outputChannel.appendLine('');
+  outputChannel.appendLine(`${document.fileName}`);
+  outputChannel.appendLine('');
   messages.forEach((msg: VFileMessage) => {
     outputChannel.appendLine(`[${msg.ruleId}] ${msg.reason}`);
   });
+  outputChannel.appendLine('');
+  outputChannel.appendLine(`${messages.length} Warnings, ${hrtime(elapsed)}`);
+  outputChannel.appendLine('');
 
   if (messages) {
     const diagnostics: vscode.Diagnostic[] = messages.map(

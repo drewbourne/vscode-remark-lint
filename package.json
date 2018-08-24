@@ -97,8 +97,9 @@
     "vfile-reporter": "^5.0.0"
   },
   "dependencies": {
-    "unified-engine": "^6.0.1",
+    "pretty-hrtime": "^1.0.3",
     "remark": "^9.0.0",
+    "unified-engine": "^6.0.1",
     "vfile": "^3.0.0",
     "vscode": "^1.1.21"
   }
