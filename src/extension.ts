@@ -47,47 +47,20 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
-      // outputChannel.appendLine(`onDidSaveTextDocument ${document.languageId}`);
       execute(document);
     })
   );
 
   context.subscriptions.push(
     vscode.workspace.onDidOpenTextDocument((document: vscode.TextDocument) => {
-      // outputChannel.appendLine(`onDidOpenTextDocument ${document.languageId}`);
       execute(document);
     })
   );
-
-  // context.subscriptions.push(
-  //   vscode.workspace.onDidCloseTextDocument((document: vscode.TextDocument) => {
-  //     outputChannel.appendLine(`onDidCloseTextDocument ${document.languageId}`);
-  //   })
-  // );
-
-  // context.subscriptions.push(
-  //   vscode.workspace.onDidChangeTextDocument(
-  //     (e: vscode.TextDocumentChangeEvent) => {
-  //       if (
-  //         ['debug', 'log'].indexOf(e.document.languageId.toLowerCase()) !== -1
-  //       ) {
-  //         return;
-  //       }
-
-  //       outputChannel.appendLine(
-  //         `onDidChangeTextDocument ${e.document.languageId}`
-  //       );
-  //     }
-  //   )
-  // );
 
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor(
       (e: vscode.TextEditor | undefined) => {
         if (e) {
-          // outputChannel.appendLine(
-          //   `onDidChangeActiveTextEditor ${e.document.languageId}`
-          // );
           execute(e.document);
         }
       }
@@ -108,18 +81,9 @@ export function deactivate() {
 }
 
 function execute(document: vscode.TextDocument) {
-  // outputChannel.appendLine(
-  //   `execute ${document.languageId} ${document.fileName}`
-  // );
-
   if (document.languageId !== 'markdown') {
-    // outputChannel.appendLine(`Unsupported languageId: ${document.languageId}`);
     return;
   }
-
-  // FIXME for new docs, with markdown languageId, fake extname & use workspace path?
-  // FIXME support plugins in extensions config?
-  // FIXME support config in home dir: ~/.remarkrc.js?
 
   const file = vfile({
     path: document.fileName,
@@ -155,9 +119,18 @@ function execute(document: vscode.TextDocument) {
         },
       },
       (error, code, context) => {
-        // outputChannel.appendLine(`error ${error}`);
-        // outputChannel.appendLine(`code ${code}`);
-        // outputChannel.appendLine(`context ${context}`);
+        if (!error) return;
+
+        outputChannel.appendLine('');
+        outputChannel.appendLine(`${document.fileName}`);
+        outputChannel.appendLine('');
+        outputChannel.appendLine(`Error running processor`);
+        outputChannel.appendLine('');
+        outputChannel.appendLine(error.toString());
+        outputChannel.appendLine(``);
+        outputChannel.appendLine(`code: ${code}`);
+        outputChannel.appendLine(`context: ${context}`);
+
         reject(error);
       }
     );
